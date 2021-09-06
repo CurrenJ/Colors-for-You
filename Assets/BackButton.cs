@@ -5,7 +5,7 @@ using UnityEngine.EventSystems;
 
 public class BackButton : MonoBehaviour, IPointerClickHandler
 {
-    public GameObject menuController;
+    public MenuController menuController;
     // Start is called before the first frame update
     void Start()
     {
@@ -20,6 +20,6 @@ public class BackButton : MonoBehaviour, IPointerClickHandler
 
     public void OnPointerClick(PointerEventData eventData)
     {
-        menuController.GetComponent<MenuController>().endCubes();
+        menuController.endCubes();
     }
 }

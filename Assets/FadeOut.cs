@@ -10,13 +10,18 @@ public class FadeOut : MonoBehaviour
     public float fadeTime;
     public bool outFade;
     public bool startFaded;
+    Image imageComponent;
+    TMPro.TextMeshProUGUI tmpComponent;
     // Start is called before the first frame update
     void Start()
     {
+        TryGetComponent<Image>(out imageComponent);
+        TryGetComponent<TMPro.TextMeshProUGUI>(out tmpComponent);
+
         if (startFaded) {
-            Color color = GetComponent<Image>().color;
+            Color color = GetCurrentColor();
             color.a = 0;
-            GetComponent<Image>().color = color;
+            SetCurrentColor(color);
         }
     }
 
@@ -24,12 +29,28 @@ public class FadeOut : MonoBehaviour
     void Update()
     {
         if (fadeStarted) {
-            Color color = GetComponent<Image>().color;
+            Color color = GetCurrentColor();
             if(outFade)
                 color.a = 1 - (Time.time - startTime) / fadeTime;
             else color.a = (Time.time - startTime) / fadeTime;
-            GetComponent<Image>().color = color;
+            SetCurrentColor(color);
         }
+    }
+
+    private Color GetCurrentColor(){
+        if(imageComponent != null)
+            return imageComponent.color;
+        else if(tmpComponent != null)
+            return tmpComponent.color;
+
+        return Color.clear;
+    }
+
+    private void SetCurrentColor(Color color){
+        if(imageComponent != null)
+            imageComponent.color = color;
+        if(tmpComponent != null)
+            tmpComponent.color = color;
     }
 
     public void fadeOut() {

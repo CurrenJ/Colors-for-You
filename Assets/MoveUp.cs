@@ -31,7 +31,7 @@ public class MoveUp : MonoBehaviour
         }
         else if (time <= 0)
             return 0;
-        else return -Mathf.Pow(time - 1, 2) + 1;
+        else return -Mathf.Pow(time - 1f, 2f) + 1f;
     }
 
     public void moveUp(bool startGame) {

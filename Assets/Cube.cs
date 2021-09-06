@@ -18,6 +18,14 @@ public class Cube : MonoBehaviour
     private float depthBounceStartTime;
     private float startDepth;
 
+    public bool selfDestruct;
+    private float selfDestructStartTime;
+    private float selfDestructDelay;
+    private float selfDestructAnimationDuration;
+    private Vector3 selfDestructStartScale;
+
+    public bool toDestroy;
+
     void Start()
     {
         depthBounce = false;
@@ -42,36 +50,62 @@ public class Cube : MonoBehaviour
 
     //}
 
-    public float depthEasingFunction(float time) {
+    public float depthEasingFunction(float time)
+    {
         if (time >= 1)
             return 0;
         else if (time <= 0)
             return 0;
-        else return -4 * Mathf.Pow(time-0.5F, 2) + 1;
+        else return -4 * Mathf.Pow(time - 0.5F, 2) + 1;
     }
 
-    public float getDepth(bool moveBackwards) {
+    public float getDepth(bool moveBackwards)
+    {
         if (!moveBackwards)
             return startDepth - depthEasingFunction((Time.time - depthBounceStartTime) / depthBounceTime) * depthBounceDistance;
         else return startDepth + depthEasingFunction((Time.time - depthBounceStartTime) / depthBounceTime) * depthBounceDistance;
     }
 
-    public Vector3 getPosition() {
+    public Vector3 getPosition()
+    {
         float time = (Time.time - startTime) / timeToReach;
         float scalar = positionFunction(time);
         Vector3 newPosition = (endPosition - startPosition) * scalar + startPosition;
         return new Vector3(transform.position.x, newPosition.y, getDepth(false));
     }
 
+    public void UpdateTransform()
+    {
+        if (selfDestruct)
+        {
+            if (selfDestructStartTime + selfDestructDelay <= Time.time)
+            {
+                float factor = positionFunction((Time.time - (selfDestructStartTime + selfDestructDelay)) / selfDestructAnimationDuration);
+                this.transform.localScale = selfDestructStartScale * (1 - factor);
+                if (factor == 1)
+                    toDestroy = true;
+            }
+        }
+        else
+        {
+            transform.localPosition = getPosition();
+            if (depthBounce)
+                doDepthBounce();
+        }
+    }
+
+
     //returns a scalar from 0 to 1 given the time expressed as a 0 to 1 scalar
-    public float positionFunction(float progress) {
+    public float positionFunction(float progress)
+    {
         if (progress >= 1) //safeguard
             return 1;
         else if (progress <= 0) //safeguard
             return 0;
         else return -Mathf.Pow(progress - 1, 2) + 1; //position easing function
     }
-    public void setCubeInfo(Vector3 startPosition, Vector3 endPosition, float timeToReach, Color color, Vector2 frustumDims, Vector2 location) {
+    public void setCubeInfo(Vector3 startPosition, Vector3 endPosition, float timeToReach, Color color, Vector2 frustumDims, Vector2 location)
+    {
         this.endPosition = endPosition;
         this.timeToReach = timeToReach;
         this.startPosition = startPosition;
@@ -83,11 +117,33 @@ public class Cube : MonoBehaviour
         startDepth = startPosition.z;
     }
 
-    public void doDepthBounce() {
+    public void doDepthBounce()
+    {
         if (Time.time - depthBounceStartTime >= depthBounceTime)
         {
             depthBounce = false;
             depthBounceStartTime = Time.time;
         }
+    }
+
+    public void SelfDestruct(Vector3 pointOfForce, float animationDuration = 1, float delay = 0)
+    {
+        selfDestruct = true;
+        selfDestructStartTime = Time.time;
+        selfDestructAnimationDuration = animationDuration;
+        selfDestructDelay = delay;
+        selfDestructStartScale = this.transform.localScale;
+
+        Collider col;
+        if (!this.TryGetComponent<Collider>(out col))
+            col = this.gameObject.AddComponent<BoxCollider>();
+
+        Rigidbody rb;
+        if (!this.TryGetComponent<Rigidbody>(out rb))
+            rb = this.gameObject.AddComponent<Rigidbody>();
+
+        rb.useGravity = true;
+        rb.isKinematic = false;
+        rb.AddExplosionForce(5, pointOfForce, 25, 1, ForceMode.Impulse);
     }
 }

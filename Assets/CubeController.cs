@@ -16,20 +16,22 @@ public class CubeController : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        foreach(Cube c in cubes) {
+        UpdateCubes();
+    }
+
+    private void UpdateCubes()
+    {
+        foreach (Cube c in cubes)
+        {
             if (c.infoSet)
             {
-                c.transform.localPosition = c.getPosition();
+                c.UpdateTransform();
 
-                if (c.transform.position.y + c.transform.lossyScale.y / 2 < Camera.main.transform.position.y - c.frustumDims.y / 2)
+                if (((c.transform.position.y + c.transform.lossyScale.y / 2 < Camera.main.transform.position.y - c.frustumDims.y / 2) && !c.selfDestruct)
+                    || c.toDestroy)
                 {
                     removeCube(c);
                     Destroy(c.gameObject);
-                }
-
-                if (c.depthBounce)
-                {
-                    c.doDepthBounce();
                 }
             }
         }
@@ -40,12 +42,23 @@ public class CubeController : MonoBehaviour
         toRemove.Clear();
     }
 
-    public void addCube(GameObject cube) {
+    public void addCube(GameObject cube)
+    {
         cubes.Add(cube.GetComponent<Cube>());
         Debug.Log(cubes.Count);
     }
 
-    public void removeCube(Cube cube) {
+    public void Knockdown()
+    {
+        Vector3 pointOfForce = Camera.main.transform.position;
+        foreach (Cube c in cubes)
+        {
+            c.SelfDestruct(pointOfForce, 3, 2);
+        }
+    }
+
+    public void removeCube(Cube cube)
+    {
         toRemove.Add(cube);
     }
 }
